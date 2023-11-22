@@ -1,23 +1,38 @@
-import logo from './logo.svg';
-import './App.css';
+import { useDispatch, useSelector } from "react-redux";
+import "./App.css";
+import { useEffect } from "react";
+import { moveBelow, updateBoard } from "./store";
+import { createBoard } from "./utils/createBoatd";
+import Board from "./componets/Board";
+import { checkForRowOfFour, checkForRowOfThree, isColumnOfFour, isColumnOfThree } from "./utils/moveCheckLogic";
+import { formulaForColumnOfFour, formulaForColumnOfThree, generateInvalidMoves } from "./utils/formulas";
 
 function App() {
+  const dispatch = useDispatch();
+  const board = useSelector((state) => state.candyCrush.board);
+  const boardSize = useSelector((state) => state.candyCrush.boardSize);
+
+  useEffect(() => {
+    dispatch(updateBoard(createBoard(boardSize)));
+  }, [boardSize, dispatch]);
+
+  useEffect(()=>{
+    const timeout = setTimeout(()=>{
+      const newBoard = [...board]
+      isColumnOfFour(newBoard, boardSize, formulaForColumnOfFour(boardSize))
+      checkForRowOfFour(newBoard, boardSize, generateInvalidMoves(boardSize, true))
+
+      isColumnOfThree(newBoard, boardSize, formulaForColumnOfThree(boardSize))
+      checkForRowOfThree(newBoard, boardSize, generateInvalidMoves(boardSize, false))
+      
+      dispatch(updateBoard(newBoard));
+      dispatch(moveBelow())
+    },100)
+    return () => clearInterval(timeout)
+  },[board,boardSize, dispatch])
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="flex items-center justify-center h-screen">
+      <Board />
     </div>
   );
 }
